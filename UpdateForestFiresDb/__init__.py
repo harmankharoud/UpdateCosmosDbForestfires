@@ -6,7 +6,6 @@ import azure.functions as func
 import re
 import requests
 from concurrent.futures import ThreadPoolExecutor, as_completed
-import azure.cosmos.cosmos_client as cosmos_client
 
 class ModifyFile:
     def __init__(self, fileName=os.environ["downloading_filename"]):
@@ -97,16 +96,14 @@ class GetNRTDataFromDefinedSat:
             return modifyFile.convertCSVtoJSON()
     
     def removeContainer(self):
-        client = cosmos_client.CosmosClient(url_connection=os.environ["cosmos_url_connection"], auth={'materKey': os.environ['cosmos_primarykey']})
         try:
-            client.DeleteContainer(os.environ["cosmos_collection_link"], options=None)
-            return "Collection Deleted!"
+            return requests.delete(os.environ["cosmos_collection_delete"])
         except:
             return "Collection doesn't exists."
 
 def main(mytimer: func.TimerRequest, outputDocument:func.Out[func.Document]) -> None:
     getNRTData = GetNRTDataFromDefinedSat()
-    logging.info("Get the container url: " + os.environ["cosmos_url_connection"])
+    logging.info("Delete container")
     deleteResponse = getNRTData.removeContainer()
     logging.info(deleteResponse)
     getNRTData.getListofFiles()
